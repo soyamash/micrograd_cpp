@@ -9,32 +9,41 @@
 
 int main () {
   Pool<Value> pool;
-  Value* value1 = pool.get();
+  Value* value1 = pool.allocate();
   value1->data_ = 2.5; value1->label_ = "1";
-  Value* value2 = pool.get();
+  Value* value2 = pool.allocate();
   value2->data_ = 3.7; value2->label_ = "2";
-  Value* value3 = pool.get();
-  value3->data_ = -3.0; value3->label_ = "3";
-  Value* value4 = pool.get();
-  value4->data_ = 1.7; value4->label_ = "4";
 
-  Value* value_1_2 = value1->add(value2);
-  value_1_2->label_ = "1_2";
-  Value* value_1_2_3 = value_1_2->mul(value3);
-  value_1_2_3->label_ = "1_2_3";
-  Value* result_final = value_1_2_3->add(value4);
-  result_final->label_ = "result_final";
-
-
-  // Access the result and print the data
-  std::cout << "Result Final: " << result_final->data_ << std::endl;
-  // result_final->set_grad(1.0);
-  result_final->backward();
-
-  std::cout<<value1->label_<<":"<<value1->data_<<" grad: "<<value1->grad_<<std::endl;
-  std::cout<<value2->label_<<":"<<value2->data_<<" grad: "<<value2->grad_<<std::endl;
-  std::cout<<value3->label_<<":"<<value3->data_<<" grad: "<<value3->grad_<<std::endl;
-  std::cout<<value4->label_<<":"<<value4->data_<<" grad: "<<value4->grad_<<std::endl;
+  std::vector<int> layer_dims;
+  layer_dims.push_back(2);
+  layer_dims.push_back(3);
+  MLP m;
+  m.init(2, layer_dims);
   
+  std::vector<Value*> input;
+  input.push_back(value1);
+  input.push_back(value2);
+
+  for (int i = 0; i < 10; i++) {
+    std::vector<Value*> ret;
+    m(input, ret);
+    for (Value *r : ret) {
+      std::cout << r->data_ << ", ";
+    }
+    std::cout << std::endl;
+    Value *loss = pool.allocate();
+    for (Value *r : ret) {
+      Value* target = pool.allocate();
+      target->data_ = 1.0;
+      r = r->sub(target);
+      Value* twice = pool.allocate();
+      twice->data_ = 2.0;
+      r = r->pow(twice);
+      loss = loss->add(r);
+    }
+    m.zeroGrad();
+    loss->backward();
+    loss->update(0.01);
+  }
   return 0;
 }

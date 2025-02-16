@@ -11,7 +11,7 @@ class Pool {
     clear();
   };
 
-  T* get() {
+  T* allocate() {
     if (pool_ptr_ % kDefaultSize == 0) {
       pool_.push_back(new T[kDefaultSize]);
     }

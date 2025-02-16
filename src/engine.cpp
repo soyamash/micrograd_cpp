@@ -10,7 +10,7 @@ Value::Value(): data_(0.0), grad_(0.0), other_ptr_(nullptr), ret_ptr_(nullptr) {
 Value::Value(double d): data_(d), grad_(0.0), other_ptr_(nullptr), ret_ptr_(nullptr) {};
 
 Value* Value::add(Value* other) {
-  Value* ret = pool_.get();
+  Value* ret = pool_.allocate();
   ret->data_ = data_ + other->data_;
   ret->prev_[other] = 0;  // setとして使用するのでvalueはダミー
   ret->prev_[this] = 0;  // setとして使用するのでvalueはダミー
@@ -21,7 +21,7 @@ Value* Value::add(Value* other) {
   return ret;
 }
 Value* Value::neg() {
-  Value* ret = pool_.get();
+  Value* ret = pool_.allocate();
   ret->data_ = -1.0;
   return this->mul(ret);
 }
@@ -29,7 +29,7 @@ Value* Value::sub(Value* other) {
   return this->add(other->neg());
 }
 Value* Value::pow(Value* other) {
-  Value* ret = pool_.get();
+  Value* ret = pool_.allocate();
   ret->data_ = std::pow(data_, other->data_);
   ret->prev_[other] = 0;  // setとして使用するのでvalueはダミー
   ret->prev_[this] = 0;  // setとして使用するのでvalueはダミー
@@ -40,12 +40,12 @@ Value* Value::pow(Value* other) {
   return ret;
 }
 Value* Value::div(Value* other) {
-  Value* ret = pool_.get();
+  Value* ret = pool_.allocate();
   ret->data_ = -1.0;
   return this->mul(other->pow(ret));
 }
 Value* Value::mul(Value* other) {
-  Value* ret = pool_.get();
+  Value* ret = pool_.allocate();
   ret->data_ = data_ * other->data_;
   ret->prev_[other] = 0;  // setとして使用するのでvalueはダミー
   ret->prev_[this] = 0;  // setとして使用するのでvalueはダミー
@@ -57,7 +57,7 @@ Value* Value::mul(Value* other) {
 }
 
 Value* Value::relu() {
-  Value* ret = pool_.get();
+  Value* ret = pool_.allocate();
   ret->data_ = (data_ > 0.0) ? data_ : 0.0;
   ret->prev_[this] = 0;  // setとして使用するのでvalueはダミー
   
